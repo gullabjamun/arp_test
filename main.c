@@ -4,6 +4,7 @@
     #include <stdio.h>
 #include <arpa/inet.h>
 #define ETHERTYPE_IP 0x0800
+#define ETHERTYPE_ARP 0X0806
 
      int main(int argc, char *argv[])
      {
@@ -28,6 +29,8 @@
 	char ip_src_str[16];
 	struct arphdr arprequest_arp;
 	struct arphdr arpreply_arp;
+	struct arphdr *arp_to_know_targetmac;
+	struct sniff_ethernet *ethernet;
 	struct sniff_ethernet arprequest_eth;
 	struct sniff_ethernet arpreply_eth;
 	struct sniff_ip *ip;
@@ -71,6 +74,7 @@
 ////	arpreply_arp.tha={target mac};
 //	arpreply_arp.tpa=htons(0x0001);				//targetip
 	
+	u_char *target_mac;
 
         /* Define the device */
         dev = pcap_lookupdev(errbuf);
@@ -102,6 +106,28 @@
 
   	  while(1)
 	  {
+	      	int res;
+		 /* Grab a packet */
+      		res=pcap_next_ex(handle, &header,&packet);
+      	        if(res==0) continue;
+		else if(res==-1) break;
+		else if(res==-2) break;
+		/* Print its length */
+
+		ethernet=(struct sniff_ethernet*)packet;
+	
+	if(ntohs((*ethernet).ether_type)==ETHERTYPE_ARP)
+	{
+		arp_to_know_targetmac==(struct arphdr*)(packet+14);
+		if(ntohs((*arp_to_know_targetmac).oper)==0x0002)
+		{
+			if(strcmp((*arp_to_know_targetmac).spa,target_ip))
+			{
+				target_mac=(*arp_to_know_targetmac).tha;
+			}
+		}
+	}	
+
 
 	      	printf("%s\n",sender_ip);
 		printf("%s\n",target_ip);
