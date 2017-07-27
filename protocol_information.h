@@ -68,5 +68,5 @@
     u_char spa[4];      /* Sender IP address       */ 
     u_char tha[6];      /* Target hardware address */ 
     u_char tpa[4];      /* Target IP address       */ 
-}
+};
 
