@@ -10,11 +10,7 @@
 	u_char send_packet[42];
 	u_char receive_packet[42];
 
-	u_char sender_ip_str[4];
-	u_char target_ip_str[4];
 
-	u_char *sender_ip=argv[2];
-	u_char *target_ip=argv[3];
         pcap_t *handle;			/* Session handle */
         char *dev;			/* The device to sniff on */
         char errbuf[PCAP_ERRBUF_SIZE];	/* Error string */
@@ -30,10 +26,18 @@
 	u_char ipoff;
 	char ip_dst_str[16];
 	char ip_src_str[16];
+	struct arphdr *arprequest;
+	struct arphdr *arpreply;
 	struct sniff_ethernet *ethernet;
 	struct sniff_ip *ip;
 	struct sniff_tcp *tcp;
 	struct sniff_data *data;
+
+	u_char sender_ip_str[4];
+	u_char target_ip_str[4];
+
+	u_char *sender_ip=argv[2];
+	u_char *target_ip=argv[3];
 
         /* Define the device */
         dev = pcap_lookupdev(errbuf);
@@ -65,12 +69,12 @@
 
 	while(1)
 	{
-		inet_pton(AF_INET,sender_ip,sender_ip_str);
-		inet_pton(AF_INET,target_ip,target_ip_str);
+		inet_pton(AF_INET,sender_ip,(*arprequest).spa);
+		inet_pton(AF_INET,target_ip,(*arprequest).spa);
 	      	printf("%s\n",sender_ip);
 		printf("%s\n",target_ip);
-	      	printf("%2x\n",*(sender_ip_str));
-		printf("%2x\n",*(target_ip_str));
+	      	printf("%2x\n",*((*arprequest).spa));
+		printf("%2x\n",*((*arprequest).spa));
 	}
 
         pcap_close(handle);
