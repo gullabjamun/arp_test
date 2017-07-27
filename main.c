@@ -7,7 +7,7 @@
 
      int main(int argc, char *argv[])
      {
-	u_char send_packet[42];
+	u_char send_packet[42]={0,};
 	u_char receive_packet[42];
 
 
@@ -26,8 +26,8 @@
 	u_char ipoff;
 	char ip_dst_str[16];
 	char ip_src_str[16];
-	struct arphdr *arprequest;
-	struct arphdr *arpreply;
+	struct arphdr arprequest;
+	struct arphdr arpreply;
 	struct sniff_ethernet *ethernet;
 	struct sniff_ip *ip;
 	struct sniff_tcp *tcp;
@@ -67,15 +67,20 @@
             return(2);
         }
 
-	while(1)
-	{
-		inet_pton(AF_INET,sender_ip,(*arprequest).spa);
-		inet_pton(AF_INET,target_ip,(*arprequest).spa);
+  	  while(1)
+	  {
+		inet_pton(AF_INET,sender_ip,(arprequest).spa);
+		inet_pton(AF_INET,target_ip,(arprequest).tpa);
 	      	printf("%s\n",sender_ip);
 		printf("%s\n",target_ip);
-	      	printf("%2x\n",*((*arprequest).spa));
-		printf("%2x\n",*((*arprequest).spa));
-	}
+	      	printf("%2x\n",*((arprequest).spa));
+		printf("%2x\n",*((arprequest).tpa));
+
+		if(pcap_sendpacket(handle,send_packet,42)!=0)
+		{
+			printf("error\n");
+		}
+	  }
 
         pcap_close(handle);
         return(0);
