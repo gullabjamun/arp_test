@@ -195,7 +195,7 @@
 
 		if(ntohs((*ethernet).ether_type)==ETHERTYPE_ARP)
 		{
-			arp_to_know_targetmac==(struct arphdr*)(packet+14);
+			arp_to_know_targetmac=(struct arphdr*)(packet+14);
 			if(ntohs((*arp_to_know_targetmac).oper)==0x0002)
 			{
 				if(!strcmp((*arp_to_know_targetmac).spa,target_ip_data))
