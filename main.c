@@ -48,7 +48,7 @@
 
  close(fd);
  memcpy(my_ip,&((((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr).s_addr),4);
- printf("%x\n",my_ip[1]);
+
 ////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////get my mac/////////////////////////////////////////
@@ -85,11 +85,6 @@
 
     if (success) memcpy(my_mac, ifr.ifr_hwaddr.sa_data, 6);
 
-    for(i=0;i<6;i++)
-    {
-        printf("%2x ",my_mac[i]);
-    }
-	printf("\n");
 ////////////////////////////////////////////////////////////////////////////////////////
 
         pcap_t *handle;			/* Session handle */
