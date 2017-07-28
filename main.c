@@ -3,6 +3,14 @@
 #include "printfunc.h"
     #include <stdio.h>
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h> /* for strncpy */
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
 #define ETHERTYPE_IP 0x0800
 #define ETHERTYPE_ARP 0X0806
 
@@ -24,6 +32,24 @@
 					 0x2B , 0x01};
 
 	u_char receive_packet[42];
+	///////get my ip//////
+ int fd;
+ struct ifreq ifr;
+ u_char my_ip[4]={0,};
+ fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+ /* I want to get an IPv4 IP address */
+ ifr.ifr_addr.sa_family = AF_INET;
+
+ /* I want IP address attached to "eth0" */
+ strncpy(ifr.ifr_name, "ens33", IFNAMSIZ-1);
+
+ ioctl(fd, SIOCGIFADDR, &ifr);
+
+ close(fd);
+ memcpy(my_ip,&((((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr).s_addr),4);
+ printf("%x\n",my_ip[1]);
+	/////////////////////
 
 
         pcap_t *handle;			/* Session handle */
