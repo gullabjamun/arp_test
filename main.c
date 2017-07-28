@@ -175,9 +175,9 @@
 
   	  while(1)
 	  {
-		printf("%s\n",sender_ip);
-		printf("%s\n",target_ip);
-
+	//	printf("%s\n",sender_ip);
+	//	printf("%s\n",target_ip);
+		printf("sending arp packet\n");
 		if(pcap_sendpacket(handle,send_packet_arprequest,42)!=0)
 		{
 			printf("error\n");
