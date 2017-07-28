@@ -97,7 +97,7 @@
 
 ////	(*arprequest_eth).ether_shost={0x00,0x0c,0x29,0xe8,0xc7,0x22};  //my mac
 ////	(*arprequest_arp).sha={0x00,0x0c,0x29,0xe8,0xc7,0x22};		//my mac
-//	(*arprequest_arp).spa=192.168.174.128			//senderip-my, i have to get my ip information
+	memcpy((*arprequest_arp).spa,my_ip,4);		//senderip-my, i have to get my ip information
 	inet_pton(AF_INET,target_ip,(*arprequest_arp).tpa); //targetip
 
 	/* attack arp reply */
@@ -173,7 +173,7 @@
 //	      	printf("%2x\n",*((arpreply_arp).spa));
 //		printf("%2x\n",*((arpreply_arp).tpa));
 
-		if(pcap_sendpacket(handle,send_packet_arpreply,42)!=0)
+		if(pcap_sendpacket(handle,send_packet_arprequest,42)!=0)
 		{
 			printf("error\n");
 		}
