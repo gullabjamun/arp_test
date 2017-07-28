@@ -122,6 +122,8 @@
 
 	u_char *sender_ip=argv[2];
 	u_char *target_ip=argv[3];
+	u_char target_ip_data[4];
+	inet_pton(AF_INET,target_ip,target_ip_data);
 
 	arprequest_eth=(struct sniff_ethernet*)send_packet_arprequest;
 	arpreply_eth=(struct sniff_ethernet*)send_packet_arpreply;
@@ -147,7 +149,7 @@
 
 			
 	
-	u_char *target_mac;
+	unsigned char target_mac[6];
 
         /* Define the device */
         dev = pcap_lookupdev(errbuf);
@@ -194,9 +196,9 @@
 		arp_to_know_targetmac==(struct arphdr*)(packet+14);
 		if(ntohs((*arp_to_know_targetmac).oper)==0x0002)
 		{
-			if(!strcmp((*arp_to_know_targetmac).spa,target_ip))
+			if(!strcmp((*arp_to_know_targetmac).spa,target_ip_data))
 			{
-				target_mac=(*arp_to_know_targetmac).tha;
+				memcpy(target_mac,(*arp_to_know_targetmac).sha,6);
 			}
 		}
 	}	
