@@ -44,11 +44,14 @@
 
 	struct arphdr *arprequest_arp;
 	struct arphdr *arpreply_arp;
+	
+	
+	struct sniff_ethernet *arprequest_eth;
+	struct sniff_ethernet *arpreply_eth;
 
 	struct arphdr *arp_to_know_targetmac;
 	struct sniff_ethernet *ethernet;
-	struct sniff_ethernet arprequest_eth;
-	struct sniff_ethernet arpreply_eth;
+	
 	struct sniff_ip *ip;
 	struct sniff_tcp *tcp;
 	struct sniff_data *data;
@@ -59,25 +62,28 @@
 	u_char *sender_ip=argv[2];
 	u_char *target_ip=argv[3];
 
+	arprequest_eth=(struct sniff_ethernet*)send_packet_arprequest;
+	arpreply_eth=(struct sniff_ethernet*)send_packet_arpreply;
 	arprequest_arp=(struct arphdr*)(send_packet_arprequest+14);
 	arpreply_arp=(struct arphdr*)(send_packet_arpreply+14);
 
 	/* arp request to know target mac address*/
-////	arprequest_eth.ether_dhost={0xff,0xff,0xff,0xff,0xff,0xff};
-////	arprequest_eth.ether_shost={0x00,0x0c,0x29,0xe8,0xc7,0x22};
-////	arprequest_arp.sha={0x00,0x0c,0x29,0xe8,0xc7,0x22};
-//	arprequest_arp.spa=htons(0x0001);			//senderip-my ip
-////	arprequest_arp.tha={0,};
-//	arprequest_arp.tpa=htons(0x0001);			//targetip
+
+////	(*arprequest_eth).ether_shost={0x00,0x0c,0x29,0xe8,0xc7,0x22};  //my mac
+////	(*arprequest_arp).sha={0x00,0x0c,0x29,0xe8,0xc7,0x22};		//my mac
+//	(*arprequest_arp).spa=192.168.174.128			//senderip-my, i have to get my ip information
+	inet_pton(AF_INET,target_ip,(*arprequest_arp).tpa); //targetip
 
 	/* attack arp reply */
-////	arpreply_eth.ether_dhost={target mac};
-////	arpreply_eth.ether_shost={0x00,0x0c,0x29,0xe8,0xc7,0x22}; 
+////	(*arpreply_eth).ether_dhost={target mac};
+////	(*arpreply_eth).ether_shost={0x00,0x0c,0x29,0xe8,0xc7,0x22}; 	//my mac
+////	(*arpreply_arp).sha={0x00,0x0c,0x29,0xe8,0xc7,0x22};		//my mac
 	inet_pton(AF_INET,sender_ip,(*arpreply_arp).spa); //sender ip - gateway
+////	(*arpreply_arp).tha={target mac};		
 	inet_pton(AF_INET,target_ip,(*arpreply_arp).tpa); //targetip
-////	arpreply_arp.sha={0x00,0x0c,0x29,0xe8,0xc7,0x22};
+
 				
-////	arpreply_arp.tha={target mac};
+
 			
 	
 	u_char *target_mac;
