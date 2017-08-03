@@ -96,12 +96,6 @@ int main(int argc, char *argv[])
    bpf_u_int32 net;                 /* Our IP */
    struct pcap_pkthdr *header;  	/* The header that pcap gives us */
    const u_char *packet;            /* The actual packet */
-    
-    u_short datalength;
-    u_char tcpoff;
-    u_char ipoff;
-    char ip_dst_str[16];
-    char ip_src_str[16];
 
     struct arphdr *arprequest_arp;
     struct arphdr *arpreply_arp;
@@ -112,13 +106,6 @@ int main(int argc, char *argv[])
 
     struct arphdr *arp_to_know_targetmac;
     struct sniff_ethernet *ethernet;
-
-    struct sniff_ip *ip;
-    struct sniff_tcp *tcp;
-    struct sniff_data *data;
-
-    u_char sender_ip_str[4];
-    u_char target_ip_str[4];
 
     u_char *sender_ip=argv[2];
     u_char *target_ip=argv[3];
