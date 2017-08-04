@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
    struct pcap_pkthdr *header;  	/* The header that pcap gives us */
    const u_char *packet;            /* The actual packet */
     
-    int success_attack;
+    int success_get_mac;
     struct arphdr *arprequest_arp;
     struct arphdr *arpreply_arp;
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
     inet_pton(AF_INET,sender_ip,(*arprequest_arp).tpa); //senderip
 
         
-      while(success_attack<=10)
+      while(success_get_mac<=10)
       {
             printf("sending arp packet to know sender mac\n");
             if(pcap_sendpacket(handle,send_packet_arprequest,42)!=0)
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
                     if(!strcmp((*arp_to_know_mac).spa,sender_ip_data))
                     {
                         memcpy(sender_mac,(*arp_to_know_mac).sha,6);
-			success_attack++;
+			success_get_mac++;
                     }
                 }
             }          
@@ -200,8 +200,8 @@ int main(int argc, char *argv[])
     memcpy((*arprequest_arp).spa,my_ip,4);          	//myip
     inet_pton(AF_INET,target_ip,(*arprequest_arp).tpa); //targetip
 
-      success_attack=0;
-      while(success_attack<=10)
+      success_get_mac=0;
+      while(success_get_mac<=10)
       {
             printf("sending arp packet to know target mac\n");
             if(pcap_sendpacket(handle,send_packet_arprequest,42)!=0)
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
            	    if(!memcmp((*arp_to_know_mac).spa,target_ip_data,4))
                     {
                         memcpy(target_mac,(*arp_to_know_mac).sha,6);
-			success_attack++;
+			success_get_mac++;
                     }
                 }
             }          
