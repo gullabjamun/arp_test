@@ -258,11 +258,12 @@ int main(int argc, char *argv[])
             else if(res==-2) break;
 
 	    ethernet_relay=(struct sniff_ethernet*)packet;
-
+if(!memcmp((*ethernet_relay).ether_shost,sender_mac,6))
+{
 	if(ntohs((*ethernet_relay).ether_type)==ETHERTYPE_IP)
 	{
-		if(!memcmp((*ethernet_relay).ether_shost,sender_mac,6))
-{
+		
+
 		ip_relay=(struct sniff_ip*)(packet+14);
 		ipoff=(ip_relay->ip_vhl & 0x0F) * 4;
 
@@ -292,9 +293,10 @@ int main(int argc, char *argv[])
                			 printf("error\n");
           		}
 		}
-}
+
 
 	 }
+}
       }
 	
 
